@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — Friendo</title>
+<link rel="stylesheet" href="main.css">
+</head>
+<body data-page="login">
+<div class="app">
+  <div class="mobile-topbar">
+    <a class="back" href="index.html">&larr; Back</a>
+    <span style="width:40px"></span>
+  </div>
+
+  <div class="page-content">
+    <h1 class="page-title">Welcome to Friendo</h1>
+    <p class="muted" style="margin-top:-10px;">Log in or create an account to start making friends.</p>
+
+    <div class="tabs">
+      <div class="tab active" id="tab-login" onclick="showMode('login')">Log In</div>
+      <div class="tab" id="tab-register" onclick="showMode('register')">Register</div>
+    </div>
+
+    <p id="formError" class="muted" style="display:none;color:var(--danger);"></p>
+
+    <!-- Login form -->
+    <form id="loginForm" onsubmit="return doLogin(event)">
+      <div class="field"><label>Email</label><input type="email" id="loginEmail" required autocomplete="email"></div>
+      <div class="field"><label>Password</label><input type="password" id="loginPassword" required autocomplete="current-password"></div>
+      <button class="btn btn-primary" type="submit" id="loginSubmit">Log In</button>
+    </form>
+
+    <!-- Register form -->
+    <form id="registerForm" style="display:none;" onsubmit="return doRegister(event)">
+      <div class="field"><label>Nickname</label><input type="text" id="regNickname" minlength="2" maxlength="30" required></div>
+      <div class="field"><label>Email</label><input type="email" id="regEmail" required autocomplete="email"></div>
+      <div class="field"><label>Password</label><input type="password" id="regPassword" minlength="8" maxlength="72" required autocomplete="new-password"></div>
+      <p class="muted" style="margin-top:-6px;">At least 8 characters.</p>
+      <button class="btn btn-primary" type="submit" id="registerSubmit">Create Account</button>
+    </form>
+  </div>
+</div>
+<script src="api.js"></script>
+<script>
+  function showMode(mode) {
+    document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+    document.getElementById('tab-register').classList.toggle('active', mode === 'register');
+    document.getElementById('loginForm').style.display = mode === 'login' ? 'block' : 'none';
+    document.getElementById('registerForm').style.display = mode === 'register' ? 'block' : 'none';
+    hideError();
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('formError');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function hideError() {
+    document.getElementById('formError').style.display = 'none';
+  }
+
+  function afterAuth(auth) {
+    Auth.setSession(auth);
+    // profile-setup/terms/privacy pages don't hit the API, so route based on
+    // whether the account already has a completed profile.
+    window.location.href = auth.profileComplete ? 'people.html' : 'terms.html';
+  }
+
+  async function doLogin(e) {
+    e.preventDefault();
+    hideError();
+    const btn = document.getElementById('loginSubmit');
+    btn.disabled = true;
+    try {
+      const auth = await Api.login(
+        document.getElementById('loginEmail').value.trim(),
+        document.getElementById('loginPassword').value
+      );
+      afterAuth(auth);
+    } catch (err) {
+      showError(err.message || 'Login failed.');
+    } finally {
+      btn.disabled = false;
+    }
+    return false;
+  }
+
+  async function doRegister(e) {
+    e.preventDefault();
+    hideError();
+    const btn = document.getElementById('registerSubmit');
+    btn.disabled = true;
+    try {
+      const auth = await Api.register(
+        document.getElementById('regEmail').value.trim(),
+        document.getElementById('regPassword').value,
+        document.getElementById('regNickname').value.trim()
+      );
+      afterAuth(auth);
+    } catch (err) {
+      showError(err.message || 'Registration failed.');
+    } finally {
+      btn.disabled = false;
+    }
+    return false;
+  }
+
+  // Preselect a tab via login.html?mode=register
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('mode') === 'register') showMode('register');
+
+  // Already logged in? Skip straight ahead.
+  if (Auth.isLoggedIn()) {
+    window.location.href = Auth.isProfileComplete() ? 'people.html' : 'terms.html';
+  }
+</script>
+</body>
+</html>

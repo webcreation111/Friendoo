@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Friendo</title>
+<link rel="stylesheet" href="main.css">
+</head>
+<body data-page="privacy">
+<div class="app">
+  <div class="mobile-topbar">
+    <a class="back" href="terms.html">&larr; Back</a>
+    
+    <span style="width:40px"></span>
+  </div>
+
+  <div class="page-content">
+    <h1 class="page-title">Privacy Policy</h1>
+    <p class="muted" style="margin-top:-10px;">Last modified June 1, 2024</p>
+    <div class="scroll-box">
+      <p>Friendo Inc. ("Friendo") respects your right to privacy and takes your privacy matters very seriously. This Privacy Policy covers the treatment of user information, including personally identifiable information, obtained when you access or use the Service.</p>
+      <p>We collect the profile details you provide (nickname, gender, birth year, nationality and region) so we can show you relevant people to connect with.</p>
+      <p>We do not sell your personal information to third parties. Information may be used to improve matching, prevent abuse, and provide customer support.</p>
+      <p>You can update or delete your profile information at any time from Settings. Deleting your account permanently removes your profile and conversations.</p>
+    </div>
+
+    <label class="checkbox-row">
+      <input type="checkbox" id="agreePrivacy" onchange="togglePrivacyBtn(this.checked)">
+      I agree to the Privacy Policy
+    </label>
+
+    <div class="btn-row">
+      <a class="btn btn-outline" href="index.html">I Don't Agree</a>
+      <a class="btn btn-primary" id="agreeBtn" href="profile-setup.html">I Agree</a>
+    </div>
+  </div>
+</div>
+<script src="main.js"></script>
+<script>
+  const agreeBtn = document.getElementById('agreeBtn');
+  function togglePrivacyBtn(checked) {
+    agreeBtn.style.opacity = checked ? '1' : '0.5';
+    agreeBtn.style.pointerEvents = checked ? 'auto' : 'none';
+  }
+  togglePrivacyBtn(false);
+</script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms of Use — Friendo</title>
+<link rel="stylesheet" href="main.css">
+</head>
+<body data-page="terms">
+<div class="app">
+  <div class="mobile-topbar">
+    <a class="back" href="index.html">&larr; Back</a>
+    
+    <span style="width:40px"></span>
+  </div>
+
+  <div class="page-content">
+    <h1 class="page-title">Terms of Use</h1>
+    <div class="scroll-box">
+      <p>This is an agreement between Friendo Inc. ("Friendo"), the owner and operator of Friendo, and the user of the Friendo application and the Site (the "Friendo" service or the "Service"), and you, a user of the Friendo Service.</p>
+      <p>By creating an account you agree to use the Service respectfully, provide accurate profile information, and refrain from harassment, spam, or impersonation of any kind.</p>
+      <p>Friendo may suspend or remove accounts that violate community guidelines, including abusive language, sharing of explicit content, or any attempt to harm other members.</p>
+      <p>The Service is provided "as is." Friendo does not guarantee uninterrupted availability and may update these Terms from time to time. Continued use of the Service after changes means you accept the updated Terms.</p>
+      <p>You must be old enough to legally use social applications in your country to create a Friendo account.</p>
+    </div>
+
+    <label class="checkbox-row">
+      <input type="checkbox" id="agreeTerms" onchange="document.getElementById('continueBtn').disabled = !this.checked;">
+      I agree to the Terms of Use
+    </label>
+
+    <div class="btn-row">
+      <a class="btn btn-outline" href="index.html">Back</a>
+      <a class="btn btn-primary" id="continueBtn" href="privacy.html" style="pointer-events:auto;" onclick="return !this.hasAttribute('disabled')">Continue</a>
+    </div>
+  </div>
+</div>
+<script src="main.js"></script>
+<script>
+  // keep the Continue button disabled (as a link, use disabled-style + guard) until checkbox is checked
+  const continueBtn = document.getElementById('continueBtn');
+  continueBtn.setAttribute('disabled', 'true');
+  continueBtn.classList.add('btn-primary');
+  continueBtn.style.opacity = '0.5';
+  continueBtn.style.pointerEvents = 'none';
+  document.getElementById('agreeTerms').addEventListener('change', function () {
+    if (this.checked) {
+      continueBtn.removeAttribute('disabled');
+      continueBtn.style.opacity = '1';
+      continueBtn.style.pointerEvents = 'auto';
+    } else {
+      continueBtn.setAttribute('disabled', 'true');
+      continueBtn.style.opacity = '0.5';
+      continueBtn.style.pointerEvents = 'none';
+    }
+  });
+</script>
+</body>
+</html>

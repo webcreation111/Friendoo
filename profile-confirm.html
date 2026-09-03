@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile Confirmation — Friendo</title>
+<link rel="stylesheet" href="main.css">
+</head>
+<body data-page="profile-confirm">
+<div class="app">
+  <div class="mobile-topbar">
+    <a class="back" href="profile-setup.html">&larr; Back</a>
+    
+    <span style="width:40px"></span>
+  </div>
+
+  <div class="page-content">
+    <h1 class="page-title">Profile Confirmation</h1>
+    <p class="muted" style="margin-top:-10px;">Please review your profile before you start.</p>
+
+    <div class="confirm-table row-list" id="confirmTable" style="margin-top:16px;"></div>
+
+    <div class="btn-row" style="margin-top:22px;">
+      <a class="btn btn-outline" href="profile-setup.html">Edit Profile</a>
+      <a class="btn btn-primary" href="people.html">Start</a>
+    </div>
+  </div>
+</div>
+<script src="api.js"></script>
+<script src="main.js"></script>
+<script>
+  Auth.requireAuth();
+  const profile = getProfile();
+  const rows = [
+    ['Nickname', profile.nickname],
+    ['Gender', profile.gender],
+    ['Birth Year', profile.birthYear],
+    ['Nationality', profile.nationality],
+    ['Region', profile.region]
+  ];
+  document.getElementById('confirmTable').innerHTML = rows.map(function (r) {
+    return '<div class="row"><span class="row-label">' + r[0] + '</span><span class="row-value">' + (r[1] || '-') + '</span></div>';
+  }).join('');
+</script>
+</body>
+</html>

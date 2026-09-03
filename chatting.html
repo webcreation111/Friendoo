@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chatting — Friendo</title>
+<link rel="stylesheet" href="main.css">
+</head>
+<body data-page="chatting">
+<div class="app has-desktop-nav">
+
+  <div class="topnav">
+    <a href="people.html" class="brand"><img src="logo.png" alt="Friendo"><span>Friendo</span></a>
+    <div class="topnav-links">
+      <a href="index.html" data-nav="home">Home</a>
+      <a href="people.html" data-nav="people">People</a>
+      <a href="friends.html" data-nav="friends">Friends</a>
+      <a href="chatting.html" data-nav="chatting">Chatting</a>
+      <a href="profile.html" data-nav="profile">Profile</a>
+      <a href="settings.html" data-nav="settings">Settings</a>
+    </div>
+    <div class="topnav-right">
+    
+      <a class="btn btn-primary btn-sm" href="payment.html">Buy</a>
+    </div>
+  </div>
+
+  <div class="mobile-topbar">
+  
+    <a href="payment.html" style="font-size:13px;color:var(--primary-dark);font-weight:600;">Buy</a>
+  </div>
+
+  <div class="page-content">
+    <h1 class="page-title">Chatting</h1>
+    <p id="chatError" class="muted" style="display:none;color:var(--danger);"></p>
+    <div id="chatContent"></div>
+  </div>
+
+  <div class="bottomnav">
+    <a href="people.html" data-nav="people"><span class="icon">&#128101;</span>People</a>
+    <a href="friends.html" data-nav="friends"><span class="icon">&#129309;</span>Friends</a>
+    <a href="chatting.html" data-nav="chatting"><span class="icon">&#128172;</span>Chatting</a>
+    <a href="profile.html" data-nav="profile"><span class="icon">&#128578;</span>Profile</a>
+    <a href="settings.html" data-nav="settings"><span class="icon">&#9881;&#65039;</span>Settings</a>
+  </div>
+</div>
+
+<!-- Chat room dialog -->
+<div class="overlay" id="chatDialog">
+  <div class="dialog" style="max-height:88vh;">
+    <div class="dialog-header"><h3 id="chatRoomName">Chat</h3><button class="close" onclick="leaveChatDialog()">&times;</button></div>
+    <div class="dialog-body" id="chatMessages" style="padding:12px 16px;min-height:220px;"></div>
+    <div class="dialog-footer">
+      <form onsubmit="return sendChatMessage(event)" style="display:flex;gap:8px;">
+        <input type="text" id="chatInput" placeholder="Type a message..." autocomplete="off"
+               style="flex:1;padding:11px 12px;border:1px solid var(--border);border-radius:6px;">
+        <button class="btn btn-primary btn-sm" type="submit" style="width:auto;">Send</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script src="api.js"></script>
+<script src="main.js"></script>
+<script>
+  Auth.requireAuth();
+
+  let rooms = [];
+  let activeRoomId = null;
+  let pollTimer = null;
+
+  function showChatError(msg) {
+    const el = document.getElementById('chatError');
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
+  }
+
+  function timeLabel(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  async function render() {
+    const el = document.getElementById('chatContent');
+    try {
+      rooms = await Api.listChatRooms();
+    } catch (err) {
+      showChatError(err.message || 'Could not load chats.');
+      return;
+    }
+    showChatError('');
+    if (rooms.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="emoji">&#128172;</div>' +
+        '<p>You don\'t have a chat room yet.<br>Start one from a friend\'s profile.</p>' +
+        '<button class="btn btn-outline btn-sm" onclick="render()">Refresh</button></div>';
+    } else {
+      el.innerHTML = '<div class="list">' + rooms.map(function (r, i) {
+        return '<div class="list-row" onclick="openChatDialog(' + i + ')"><div class="avatar">' + r.otherNickname.charAt(0).toUpperCase() + '</div>' +
+          '<div class="info"><div class="name">' + r.otherNickname + '</div><div class="sub">' + (r.lastMessage || 'Say hello!') + '</div></div>' +
+          '<div class="time">' + timeLabel(r.lastMessageAt) + '</div></div>';
+      }).join('') + '</div>';
+    }
+  }
+
+  function renderMessages(messages) {
+    const el = document.getElementById('chatMessages');
+    const myId = String(Auth.getUserId());
+    el.innerHTML = messages.map(function (m) {
+      const mine = String(m.senderId) === myId;
+      return '<div style="margin-bottom:10px;text-align:' + (mine ? 'right' : 'left') + ';">' +
+        '<div style="font-size:11px;color:var(--text-soft);">' + (mine ? 'You' : m.senderNickname) + '</div>' +
+        '<div style="display:inline-block;padding:8px 12px;border-radius:12px;background:' + (mine ? 'var(--primary)' : 'var(--bg-soft)') + ';color:' + (mine ? '#fff' : 'var(--text)') + ';max-width:80%;">' +
+        m.content + '</div></div>';
+    }).join('') || '<p class="muted">No messages yet — say hello!</p>';
+    el.scrollTop = el.scrollHeight;
+  }
+
+  async function loadMessages(roomId) {
+    try {
+      const page = await Api.getMessages(roomId, 0, 50);
+      const messages = (page.content || page).slice().reverse();
+      renderMessages(messages);
+    } catch (err) {
+      document.getElementById('chatMessages').innerHTML =
+        '<p class="muted" style="color:var(--danger);">' + (err.message || 'Could not load messages.') + '</p>';
+    }
+  }
+
+  function openChatDialog(i) {
+    const room = rooms[i];
+    activeRoomId = room.roomId;
+    document.getElementById('chatRoomName').textContent = room.otherNickname;
+    openDialog('chatDialog');
+    loadMessages(activeRoomId);
+    LiveChat.subscribeToRoom(activeRoomId, function (msg) {
+      if (msg.roomId === activeRoomId) loadMessages(activeRoomId);
+    });
+    // REST fallback: poll every 3s in case the WebSocket didn't connect.
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(function () { loadMessages(activeRoomId); }, 3000);
+  }
+
+  function leaveChatDialog() {
+    closeDialog('chatDialog');
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    activeRoomId = null;
+    render(); // refresh the room list's last-message preview
+  }
+
+  async function sendChatMessage(e) {
+    e.preventDefault();
+    const input = document.getElementById('chatInput');
+    const content = input.value.trim();
+    if (!content || !activeRoomId) return false;
+    input.value = '';
+    const sentOverSocket = LiveChat.send(activeRoomId, content);
+    if (!sentOverSocket) {
+      try {
+        await Api.sendMessage(activeRoomId, content);
+      } catch (err) {
+        alert(err.message || 'Could not send message.');
+      }
+    }
+    loadMessages(activeRoomId);
+    return false;
+  }
+
+  LiveChat.connect();
+  render();
+</script>
+</body>
+</html>

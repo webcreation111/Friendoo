@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile — Friendo</title>
+<link rel="stylesheet" href="main.css">
+</head>
+<body data-page="profile">
+<div class="app has-desktop-nav">
+
+  <div class="topnav">
+    <a href="people.html" class="brand"><img src="logo.png" alt="Friendo"><span>Friendo</span></a>
+    <div class="topnav-links">
+      <a href="index.html" data-nav="home">Home</a>
+      <a href="people.html" data-nav="people">People</a>
+      <a href="friends.html" data-nav="friends">Friends</a>
+      <a href="chatting.html" data-nav="chatting">Chatting</a>
+      <a href="profile.html" data-nav="profile">Profile</a>
+      <a href="settings.html" data-nav="settings">Settings</a>
+    </div>
+    <div class="topnav-right">
+      
+      <a class="btn btn-primary btn-sm" href="payment.html">Buy</a>
+    </div>
+  </div>
+
+  <div class="mobile-topbar">
+    
+    <a href="payment.html" style="font-size:13px;color:var(--primary-dark);font-weight:600;">Buy</a>
+  </div>
+
+  <div class="page-content">
+    <h1 class="page-title">Profile</h1>
+
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:8px;">
+      <div class="avatar" style="width:72px;height:72px;font-size:24px;">&#128100;</div>
+    </div>
+
+    <h2 class="section-title">Basic Information</h2>
+    <div class="row-list" id="basicInfo"></div>
+
+    <h2 class="section-title">Self-introduction</h2>
+    <div class="field"><textarea id="selfIntro" placeholder="Enter your self-introduction."></textarea></div>
+
+    <h2 class="section-title">Extra Information</h2>
+    <div class="field"><textarea id="extraInfo" placeholder="Anything else you'd like people to know."></textarea></div>
+
+    <h2 class="section-title">Profile Privacy</h2>
+    <div class="row-list">
+      <label class="row clickable"><span class="row-label">Public</span><input type="radio" name="priv" id="privPublic"></label>
+      <label class="row clickable"><span class="row-label">Friends only</span><input type="radio" name="priv" id="privFriends"></label>
+    </div>
+
+    <p id="profileError" class="muted" style="display:none;color:var(--danger);"></p>
+    <div class="btn-row" style="margin-top:20px;">
+      <button class="btn btn-primary" id="saveBtn" onclick="saveAll()">Save Changes</button>
+    </div>
+  </div>
+
+  <div class="bottomnav">
+    <a href="people.html" data-nav="people"><span class="icon">&#128101;</span>People</a>
+    <a href="friends.html" data-nav="friends"><span class="icon">&#129309;</span>Friends</a>
+    <a href="chatting.html" data-nav="chatting"><span class="icon">&#128172;</span>Chatting</a>
+    <a href="profile.html" data-nav="profile"><span class="icon">&#128578;</span>Profile</a>
+    <a href="settings.html" data-nav="settings"><span class="icon">&#9881;&#65039;</span>Settings</a>
+  </div>
+</div>
+
+<script src="api.js"></script>
+<script src="main.js"></script>
+<script>
+  Auth.requireAuth();
+
+  function renderBasicInfo(p) {
+    document.getElementById('basicInfo').innerHTML =
+      '<div class="row"><span class="row-label">Nickname</span><span class="row-value">' + (p.nickname || '-') + '</span></div>' +
+      '<div class="row"><span class="row-label">Gender</span><span class="row-value">' + (p.gender || '-') + '</span></div>' +
+      '<div class="row"><span class="row-label">Birth Year</span><span class="row-value">' + (p.birthYear || '-') + '</span></div>' +
+      '<div class="row"><span class="row-label">Country</span><span class="row-value">' + (p.nationality || '-') + '</span></div>' +
+      '<div class="row"><span class="row-label">Region</span><span class="row-value">' + (p.region || '-') + '</span></div>';
+    document.getElementById('selfIntro').value = p.selfIntroduction || '';
+    document.getElementById('extraInfo').value = p.extraInformation || '';
+    document.getElementById('privPublic').checked = (p.privacy || 'Public') === 'Public';
+    document.getElementById('privFriends').checked = p.privacy === 'Friends only';
+  }
+
+  function showProfileError(msg) {
+    const el = document.getElementById('profileError');
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
+  }
+
+  async function loadProfile() {
+    try {
+      const p = await Api.getMyProfile();
+      saveProfile(p); // keep local cache in sync too
+      renderBasicInfo(p);
+    } catch (err) {
+      showProfileError(err.message || 'Could not load your profile.');
+      renderBasicInfo(getProfile()); // fall back to last cached copy
+    }
+  }
+
+  async function saveAll() {
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    showProfileError('');
+    try {
+      const updated = await Api.updateProfile({
+        selfIntroduction: document.getElementById('selfIntro').value,
+        extraInformation: document.getElementById('extraInfo').value,
+        privacy: document.getElementById('privFriends').checked ? 'Friends only' : 'Public',
+      });
+      saveProfile(updated);
+    } catch (err) {
+      showProfileError(err.message || 'Could not save changes.');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  loadProfile();
+</script>
+</body>
+</html>

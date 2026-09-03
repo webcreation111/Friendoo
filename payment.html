@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support Friendo — Subscription</title>
+<link rel="stylesheet" href="main.css">
+</head>
+<body data-page="payment">
+<div class="app has-desktop-nav">
+
+  <div class="topnav">
+    
+    <div class="topnav-links">
+      <a href="index.html" data-nav="home">Home</a>
+      <a href="people.html" data-nav="people">People</a>
+      <a href="friends.html" data-nav="friends">Friends</a>
+      <a href="chatting.html" data-nav="chatting">Chatting</a>
+      <a href="profile.html" data-nav="profile">Profile</a>
+      <a href="settings.html" data-nav="settings">Settings</a>
+    </div>
+    <div class="topnav-right">
+    
+      <a class="btn btn-primary btn-sm" href="payment.html">Buy</a>
+    </div>
+  </div>
+
+  <div class="mobile-topbar">
+    <a class="back" href="settings.html">&larr; Back</a>
+    
+    <span style="width:40px"></span>
+  </div>
+
+  <div class="page-content">
+    <h1 class="page-title">Support Friendo</h1>
+    <p class="muted" style="margin-top:-10px;">Purchase Friendo items, or subscribe for uninterrupted access.</p>
+
+    <p id="paymentError" class="muted" style="display:none;color:var(--danger);"></p>
+
+    <h2 class="section-title">One-time purchase</h2>
+    <div class="plan-card">
+      <div class="plan-name">Friendo Items</div>
+      <div class="plan-price">Custom <span>amount</span></div>
+      <ul>
+        <li>Boost your profile visibility</li>
+        <li>Unlock extra profile customization</li>
+      </ul>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="itemsBtn" onclick="buyItems()">Proceed to Payment</button>
+      </div>
+    </div>
+
+    <h2 class="section-title">Subscription</h2>
+    <div class="plan-card">
+      <div class="plan-name">Friendo Monthly</div>
+      <div class="plan-price">&#8377;29 <span>/ month</span></div>
+      <ul>
+        <li>Unlimited friend requests</li>
+        <li>Priority placement in People</li>
+        <li>Ad-free experience</li>
+        <li>Cancel anytime</li>
+      </ul>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="subBtn" onclick="subscribeMonthly()">Pay with Razorpay</button>
+      </div>
+      <p class="muted" style="margin-top:10px;margin-bottom:0;">You'll be taken to Razorpay's secure payment page to complete your &#8377;29/month subscription. Friendo does not store your card details.</p>
+    </div>
+    <p class="muted" id="subStatus" style="display:none;">You're on the Friendo Monthly plan.</p>
+
+    <h2 class="section-title">Get the app</h2>
+    <a class="store-badge" href="javascript:void(0)" onclick="openPlayStore()">
+      <span class="store-icon">&#9654;</span>
+      <span class="store-text">GET IT ON<strong>Google Play</strong></span>
+    </a>
+    <p class="muted" style="margin-top:8px;">Your profile, friends and chat data stay in sync when you use the Friendo app from Google Play.</p>
+  </div>
+
+  <div class="bottomnav">
+    <a href="people.html" data-nav="people"><span class="icon">&#128101;</span>People</a>
+    <a href="friends.html" data-nav="friends"><span class="icon">&#129309;</span>Friends</a>
+    <a href="chatting.html" data-nav="chatting"><span class="icon">&#128172;</span>Chatting</a>
+    <a href="profile.html" data-nav="profile"><span class="icon">&#128578;</span>Profile</a>
+    <a href="settings.html" data-nav="settings"><span class="icon">&#9881;&#65039;</span>Settings</a>
+  </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="api.js"></script>
+<script src="main.js"></script>
+<script>
+  Auth.requireAuth();
+
+  function showPaymentError(msg) {
+    const el = document.getElementById('paymentError');
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
+  }
+
+  /** Creates a Razorpay order on the backend, opens Razorpay Checkout, then
+   *  asks the backend to verify the signature server-side before unlocking anything. */
+  async function payWithRazorpay(purpose, amountPaise, description) {
+    showPaymentError('');
+    try {
+      const order = await Api.createOrder(purpose, amountPaise);
+      const nickname = localStorage.getItem('friendo_nickname') || 'Friendo user';
+      const options = {
+        key: order.razorpayKeyId,
+        amount: order.amountPaise,
+        currency: order.currency,
+        name: 'Friendo',
+        description: description,
+        order_id: order.razorpayOrderId,
+        handler: async function (response) {
+          try {
+            const result = await Api.verifyPayment({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+            if (result.subscribed) {
+              document.getElementById('subStatus').style.display = 'block';
+            }
+            alert('Payment verified! Thanks for supporting Friendo.');
+          } catch (err) {
+            showPaymentError(err.message || 'Payment succeeded but verification failed.');
+          }
+        },
+        prefill: { name: nickname },
+        theme: { color: '#5CB0D6' },
+      };
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      showPaymentError(err.message || 'Could not start checkout.');
+    }
+  }
+
+  function buyItems() {
+    const rupees = prompt('Enter the amount you want to add (in INR):', '50');
+    if (!rupees) return;
+    const paise = Math.round(parseFloat(rupees) * 100);
+    if (!paise || paise <= 0) { alert('Please enter a valid amount.'); return; }
+    payWithRazorpay('ITEMS', paise, 'Friendo Items');
+  }
+
+  function subscribeMonthly() {
+    // amountPaise is ignored server-side for the subscription (fixed at ₹29),
+    // but the DTO still requires a positive value.
+    payWithRazorpay('MONTHLY_SUBSCRIPTION', 2900, 'Friendo Monthly Subscription');
+  }
+
+  async function loadStatus() {
+    try {
+      const status = await Api.paymentStatus();
+      if (status.subscribed) document.getElementById('subStatus').style.display = 'block';
+    } catch (err) {
+      showPaymentError(err.message || 'Could not load subscription status.');
+    }
+  }
+
+  loadStatus();
+</script>
+</body>
+</html>

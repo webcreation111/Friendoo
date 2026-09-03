@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create your profile — Friendo</title>
+<link rel="stylesheet" href="main.css">
+</head>
+<body data-page="profile-setup">
+<div class="app">
+  <div class="mobile-topbar">
+    <a class="back" href="privacy.html">&larr; Back</a>
+  
+    <span style="width:40px"></span>
+  </div>
+
+  <div class="page-content">
+    <h1 class="page-title">Let's create your profile</h1>
+    <p class="muted" style="margin-top:-10px;">Now, please try to make friends by using mobile messenger/social network!</p>
+
+    <div class="row-list" style="margin-top:16px;">
+      <div class="row clickable" onclick="openDialog('nicknameDialog')">
+        <span class="row-label">Nickname</span>
+        <span class="row-value" id="nicknameValue">Select &rsaquo;</span>
+      </div>
+      <div class="row clickable" onclick="openDialog('genderDialog')">
+        <span class="row-label">Gender</span>
+        <span class="row-value" id="genderValue">Select &rsaquo;</span>
+      </div>
+      <div class="row clickable" onclick="openDialog('birthYearDialog')">
+        <span class="row-label">Birth Year</span>
+        <span class="row-value" id="birthYearValue">Select &rsaquo;</span>
+      </div>
+      <div class="row clickable" onclick="openDialog('nationalityDialog')">
+        <span class="row-label">Nationality</span>
+        <span class="row-value" id="nationalityValue">Select &rsaquo;</span>
+      </div>
+      <div class="row clickable" onclick="tryOpenRegion()">
+        <span class="row-label">Region</span>
+        <span class="row-value" id="regionValue">Select &rsaquo;</span>
+      </div>
+    </div>
+
+    <div class="btn-row" style="margin-top:22px;">
+      <button class="btn btn-primary" id="startBtn" onclick="goConfirm()" disabled>Start</button>
+    </div>
+  </div>
+</div>
+
+<!-- Nickname dialog -->
+<div class="overlay" id="nicknameDialog">
+  <div class="dialog">
+    <div class="dialog-header"><h3>Enter Nickname</h3><button class="close" onclick="closeDialog('nicknameDialog')">&times;</button></div>
+    <div class="dialog-footer">
+      <input type="text" id="nicknameInput" placeholder="Your nickname" style="width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:12px;">
+      <button class="btn btn-primary" onclick="setNickname()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Gender dialog -->
+<div class="overlay" id="genderDialog">
+  <div class="dialog">
+    <div class="dialog-header"><h3>Select Gender</h3><button class="close" onclick="closeDialog('genderDialog')">&times;</button></div>
+    <div class="dialog-body" id="genderList">
+      <label class="option-row"><span>Male</span><input type="radio" name="gender" onclick="setGender('Male')"></label>
+      <label class="option-row"><span>Female</span><input type="radio" name="gender" onclick="setGender('Female')"></label>
+      <label class="option-row"><span>Other</span><input type="radio" name="gender" onclick="setGender('Other')"></label>
+      <label class="option-row"><span>Prefer not to say</span><input type="radio" name="gender" onclick="setGender('Prefer not to say')"></label>
+    </div>
+  </div>
+</div>
+
+<!-- Birth year dialog -->
+<div class="overlay" id="birthYearDialog">
+  <div class="dialog">
+    <div class="dialog-header"><h3>Choose birth year</h3><button class="close" onclick="closeDialog('birthYearDialog')">&times;</button></div>
+    <div class="dialog-body" id="birthYearList"></div>
+  </div>
+</div>
+
+<!-- Nationality dialog -->
+<div class="overlay" id="nationalityDialog">
+  <div class="dialog">
+    <div class="dialog-header"><h3>Select Nationality</h3><button class="close" onclick="closeDialog('nationalityDialog')">&times;</button></div>
+    <div class="dialog-search"><input type="text" placeholder="Search nationality" oninput="filterOptionRows(this, '#nationalityList')"></div>
+    <div class="dialog-body" id="nationalityList"></div>
+  </div>
+</div>
+
+<!-- Region dialog -->
+<div class="overlay" id="regionDialog">
+  <div class="dialog">
+    <div class="dialog-header"><h3>Select Region</h3><button class="close" onclick="closeDialog('regionDialog')">&times;</button></div>
+    <div class="dialog-search"><input type="text" placeholder="Search region" oninput="filterOptionRows(this, '#regionList')"></div>
+    <div class="dialog-body" id="regionList"></div>
+  </div>
+</div>
+
+<script src="api.js"></script>
+<script src="main.js"></script>
+<script>
+  Auth.requireAuth();
+  const profile = getProfile();
+
+  function refreshRows() {
+    document.getElementById('nicknameValue').textContent = (profile.nickname || 'Select') + ' \u203a';
+    document.getElementById('genderValue').textContent = (profile.gender || 'Select') + ' \u203a';
+    document.getElementById('birthYearValue').textContent = (profile.birthYear || 'Select') + ' \u203a';
+    document.getElementById('nationalityValue').textContent = (profile.nationality || 'Select') + ' \u203a';
+    document.getElementById('regionValue').textContent = (profile.region || 'Select') + ' \u203a';
+    const complete = profile.nickname && profile.gender && profile.birthYear && profile.nationality && profile.region;
+    document.getElementById('startBtn').disabled = !complete;
+  }
+
+  function setNickname() {
+    const val = document.getElementById('nicknameInput').value.trim();
+    if (!val) return;
+    profile.nickname = val;
+    saveProfile(profile);
+    closeDialog('nicknameDialog');
+    refreshRows();
+  }
+
+  function setGender(val) {
+    profile.gender = val;
+    saveProfile(profile);
+    closeDialog('genderDialog');
+    refreshRows();
+  }
+
+  function buildBirthYears() {
+    const list = document.getElementById('birthYearList');
+    const thisYear = new Date().getFullYear();
+    let html = '';
+    for (let y = thisYear - 15; y >= thisYear - 80; y--) {
+      html += '<label class="option-row" data-label="' + y + '"><span>' + y + '</span><input type="radio" name="byear" onclick="setBirthYear(' + y + ')"></label>';
+    }
+    list.innerHTML = html;
+  }
+  function setBirthYear(y) {
+    profile.birthYear = String(y);
+    saveProfile(profile);
+    closeDialog('birthYearDialog');
+    refreshRows();
+  }
+
+  function buildNationalities() {
+    const list = document.getElementById('nationalityList');
+    list.innerHTML = COUNTRIES.map(function (c) {
+      return '<label class="option-row" data-label="' + c.name + '"><span><span class="flag">' + c.flag + '</span>' + c.name + '</span><input type="radio" name="nat" onclick="setNationality(\'' + c.name + '\')"></label>';
+    }).join('');
+  }
+  function setNationality(name) {
+    profile.nationality = name;
+    profile.region = ''; // region depends on nationality — reset
+    saveProfile(profile);
+    closeDialog('nationalityDialog');
+    refreshRows();
+  }
+
+  function tryOpenRegion() {
+    if (!profile.nationality) { openDialog('nationalityDialog'); return; }
+    const regions = REGIONS[profile.nationality] || ['Not specified'];
+    document.getElementById('regionList').innerHTML = regions.map(function (r) {
+      return '<label class="option-row" data-label="' + r + '"><span>' + r + '</span><input type="radio" name="reg" onclick="setRegion(\'' + r + '\')"></label>';
+    }).join('');
+    openDialog('regionDialog');
+  }
+  function setRegion(r) {
+    profile.region = r;
+    saveProfile(profile);
+    closeDialog('regionDialog');
+    refreshRows();
+  }
+
+  async function goConfirm() {
+    const btn = document.getElementById('startBtn');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    try {
+      await Api.setupProfile({
+        nickname: profile.nickname,
+        gender: profile.gender,
+        birthYear: profile.birthYear,
+        nationality: profile.nationality,
+        region: profile.region,
+      });
+      Auth.setProfileComplete(true);
+      window.location.href = 'profile-confirm.html';
+    } catch (err) {
+      alert(err.message || 'Could not save your profile. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Start';
+    }
+  }
+
+  buildBirthYears();
+  buildNationalities();
+  refreshRows();
+</script>
+</body>
+</html>

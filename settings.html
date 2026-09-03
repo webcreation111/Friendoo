@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Friendo</title>
+<link rel="stylesheet" href="main.css">
+</head>
+<body data-page="settings">
+<div class="app has-desktop-nav">
+
+  <div class="topnav">
+    
+    <div class="topnav-links">
+      <a href="index.html" data-nav="home">Home</a>
+      <a href="people.html" data-nav="people">People</a>
+      <a href="friends.html" data-nav="friends">Friends</a>
+      <a href="chatting.html" data-nav="chatting">Chatting</a>
+      <a href="profile.html" data-nav="profile">Profile</a>
+      <a href="settings.html" data-nav="settings">Settings</a>
+    </div>
+    <div class="topnav-right">
+      <a class="btn btn-primary btn-sm" href="payment.html">Buy</a>
+    </div>
+  </div>
+
+  <div class="mobile-topbar">
+    <div class="brand"><img src="logo.png" alt="Friendo"><span>Friendo</span></div>
+    <a href="payment.html" style="font-size:13px;color:var(--primary-dark);font-weight:600;">Buy</a>
+  </div>
+
+  <div class="page-content">
+    <h1 class="page-title">Settings</h1>
+
+    <h2 class="section-title">People Search Options</h2>
+    <div class="row-list">
+      <div class="row clickable" onclick="openDialog('genderDialog')"><span class="row-label">Gender</span><span class="row-value" id="setGender">All &rsaquo;</span></div>
+      <div class="row clickable" onclick="openDialog('minAgeDialog')"><span class="row-label">Minimum age</span><span class="row-value" id="setMinAge">All &rsaquo;</span></div>
+      <div class="row clickable" onclick="openDialog('maxAgeDialog')"><span class="row-label">Maximum age</span><span class="row-value" id="setMaxAge">All &rsaquo;</span></div>
+      <div class="row clickable" onclick="openDialog('nationalityDialog')"><span class="row-label">Nationality</span><span class="row-value" id="setNat">All &rsaquo;</span></div>
+      <div class="row clickable" onclick="tryOpenRegion()"><span class="row-label">Region</span><span class="row-value" id="setReg">All &rsaquo;</span></div>
+    </div>
+
+    <h2 class="section-title">Allow Setting</h2>
+    <div class="row-list">
+      <div class="row"><span class="row-label">Receive Friend Requests</span>
+        <label class="switch"><input type="checkbox" id="toggleRequests" checked><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <h2 class="section-title">Notifications</h2>
+    <div class="row-list">
+      <div class="row"><span class="row-label">Friend request notification</span>
+        <label class="switch"><input type="checkbox" id="toggleFriendNotif" checked><span class="slider"></span></label>
+      </div>
+      <div class="row"><span class="row-label">Chatting notification</span>
+        <label class="switch"><input type="checkbox" id="toggleChatNotif" checked><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <h2 class="section-title">Display</h2>
+    <div class="row-list">
+      <div class="row"><span class="row-label">Font Size</span><span class="row-value">Medium 100% &rsaquo;</span></div>
+    </div>
+
+    <h2 class="section-title">Buy</h2>
+    <div class="row-list">
+      <a class="row clickable" href="payment.html"><span class="row-label">Buying items / Subscription</span><span class="row-value">&rsaquo;</span></a>
+    </div>
+
+    <h2 class="section-title">Contact</h2>
+    <div class="row-list">
+      <a class="row clickable" href="contact.html"><span class="row-label">Report bugs</span><span class="row-value">&rsaquo;</span></a>
+    </div>
+
+    <h2 class="section-title">Account</h2>
+    <div class="row-list">
+      <div class="row clickable" onclick="logout()"><span class="row-label">Log out</span><span class="row-value">&rsaquo;</span></div>
+      <div class="row danger clickable" onclick="openDialog('deleteDialog')"><span class="row-label">Delete your account</span><span class="row-value">&rsaquo;</span></div>
+    </div>
+  </div>
+
+  <div class="bottomnav">
+    <a href="people.html" data-nav="people"><span class="icon">&#128101;</span>People</a>
+    <a href="friends.html" data-nav="friends"><span class="icon">&#129309;</span>Friends</a>
+    <a href="chatting.html" data-nav="chatting"><span class="icon">&#128172;</span>Chatting</a>
+    <a href="profile.html" data-nav="profile"><span class="icon">&#128578;</span>Profile</a>
+    <a href="settings.html" data-nav="settings"><span class="icon">&#9881;&#65039;</span>Settings</a>
+  </div>
+</div>
+
+<!-- Search option dialogs -->
+<div class="overlay" id="genderDialog">
+  <div class="dialog">
+    <div class="dialog-header"><h3>Search Gender</h3><button class="close" onclick="closeDialog('genderDialog')">&times;</button></div>
+    <div class="dialog-body">
+      <label class="option-row"><span>All</span><input type="radio" name="sgender" onclick="setSearchField('searchGender','All')"></label>
+      <label class="option-row"><span>Male</span><input type="radio" name="sgender" onclick="setSearchField('searchGender','Male')"></label>
+      <label class="option-row"><span>Female</span><input type="radio" name="sgender" onclick="setSearchField('searchGender','Female')"></label>
+      <label class="option-row"><span>Other</span><input type="radio" name="sgender" onclick="setSearchField('searchGender','Other')"></label>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="minAgeDialog">
+  <div class="dialog">
+    <div class="dialog-header"><h3>Minimum age</h3><button class="close" onclick="closeDialog('minAgeDialog')">&times;</button></div>
+    <div class="dialog-body" id="minAgeList"></div>
+  </div>
+</div>
+<div class="overlay" id="maxAgeDialog">
+  <div class="dialog">
+    <div class="dialog-header"><h3>Maximum age</h3><button class="close" onclick="closeDialog('maxAgeDialog')">&times;</button></div>
+    <div class="dialog-body" id="maxAgeList"></div>
+  </div>
+</div>
+<div class="overlay" id="nationalityDialog">
+  <div class="dialog">
+    <div class="dialog-header"><h3>Select Nationality</h3><button class="close" onclick="closeDialog('nationalityDialog')">&times;</button></div>
+    <div class="dialog-search"><input type="text" placeholder="Search nationality" oninput="filterOptionRows(this, '#nationalityList')"></div>
+    <div class="dialog-body" id="nationalityList"></div>
+  </div>
+</div>
+<div class="overlay" id="regionDialog">
+  <div class="dialog">
+    <div class="dialog-header"><h3>Select Region</h3><button class="close" onclick="closeDialog('regionDialog')">&times;</button></div>
+    <div class="dialog-search"><input type="text" placeholder="Search region" oninput="filterOptionRows(this, '#regionList')"></div>
+    <div class="dialog-body" id="regionList"></div>
+  </div>
+</div>
+
+<div class="overlay center" id="deleteDialog">
+  <div class="dialog confirm">
+    <h3 style="margin:0 0 6px 0;">Delete your account?</h3>
+    <p>This action can't be undone. All of your profile, friends and chat data will be permanently removed.</p>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="closeDialog('deleteDialog')">Cancel</button>
+      <button class="btn btn-danger" onclick="deleteAccount()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script src="api.js"></script>
+<script src="main.js"></script>
+<script>
+  Auth.requireAuth();
+
+  let settings = getSettings();
+
+  function refreshRows() {
+    document.getElementById('setGender').textContent = (settings.searchGender || 'All') + ' \u203a';
+    document.getElementById('setMinAge').textContent = (settings.minAge || 'All') + ' \u203a';
+    document.getElementById('setMaxAge').textContent = (settings.maxAge || 'All') + ' \u203a';
+    document.getElementById('setNat').textContent = (settings.searchNationality || 'All') + ' \u203a';
+    document.getElementById('setReg').textContent = (settings.searchRegion || 'All') + ' \u203a';
+    document.getElementById('toggleRequests').checked = !!settings.receiveFriendRequests;
+    document.getElementById('toggleFriendNotif').checked = !!settings.friendRequestNotif;
+    document.getElementById('toggleChatNotif').checked = !!settings.chattingNotif;
+  }
+
+  async function persist(partial) {
+    Object.assign(settings, partial);
+    try {
+      settings = await Api.updateSettings({
+        searchGender: settings.searchGender,
+        minAge: settings.minAge,
+        maxAge: settings.maxAge,
+        searchNationality: settings.searchNationality,
+        searchRegion: settings.searchRegion,
+        receiveFriendRequests: settings.receiveFriendRequests,
+        friendRequestNotif: settings.friendRequestNotif,
+        chattingNotif: settings.chattingNotif,
+        fontSize: settings.fontSize,
+      });
+      saveSettings(settings);
+    } catch (err) {
+      alert(err.message || 'Could not save that setting.');
+    }
+    refreshRows();
+  }
+
+  function setSearchField(field, value) {
+    ['genderDialog', 'nationalityDialog', 'regionDialog'].forEach(closeDialog);
+    const patch = {};
+    patch[field] = value;
+    if (field === 'searchNationality') patch.searchRegion = 'All'; // region depends on nationality
+    persist(patch);
+  }
+
+  function buildAgeLists() {
+    let html = '<label class="option-row"><span>All</span><input type="radio" name="minage" onclick="setSearchField(\'minAge\',\'All\')"></label>';
+    for (let a = 18; a <= 80; a += 1) {
+      html += '<label class="option-row"><span>' + a + '</span><input type="radio" name="minage" onclick="setSearchField(\'minAge\',\'' + a + '\')"></label>';
+    }
+    document.getElementById('minAgeList').innerHTML = html;
+
+    html = '<label class="option-row"><span>All</span><input type="radio" name="maxage" onclick="setSearchField(\'maxAge\',\'All\')"></label>';
+    for (let a = 18; a <= 80; a += 1) {
+      html += '<label class="option-row"><span>' + a + '</span><input type="radio" name="maxage" onclick="setSearchField(\'maxAge\',\'' + a + '\')"></label>';
+    }
+    document.getElementById('maxAgeList').innerHTML = html;
+  }
+
+  function buildNationalities() {
+    document.getElementById('nationalityList').innerHTML =
+      '<label class="option-row" data-label="All"><span>All</span><input type="radio" name="snat" onclick="setSearchField(\'searchNationality\',\'All\')"></label>' +
+      COUNTRIES.map(function (c) {
+        return '<label class="option-row" data-label="' + c.name + '"><span><span class="flag">' + c.flag + '</span>' + c.name + '</span><input type="radio" name="snat" onclick="setSearchField(\'searchNationality\',\'' + c.name + '\')"></label>';
+      }).join('');
+  }
+
+  function tryOpenRegion() {
+    const regions = REGIONS[settings.searchNationality] || ['All'];
+    document.getElementById('regionList').innerHTML =
+      '<label class="option-row" data-label="All"><span>All</span><input type="radio" name="sreg" onclick="setSearchField(\'searchRegion\',\'All\')"></label>' +
+      regions.map(function (r) {
+        return '<label class="option-row" data-label="' + r + '"><span>' + r + '</span><input type="radio" name="sreg" onclick="setSearchField(\'searchRegion\',\'' + r + '\')"></label>';
+      }).join('');
+    openDialog('regionDialog');
+  }
+
+  ['toggleRequests', 'toggleFriendNotif', 'toggleChatNotif'].forEach(function (id) {
+    document.getElementById(id).addEventListener('change', function () {
+      persist({
+        receiveFriendRequests: document.getElementById('toggleRequests').checked,
+        friendRequestNotif: document.getElementById('toggleFriendNotif').checked,
+        chattingNotif: document.getElementById('toggleChatNotif').checked,
+      });
+    });
+  });
+
+  async function loadSettings() {
+    try {
+      settings = await Api.getSettings();
+      saveSettings(settings);
+    } catch (err) {
+      alert(err.message || 'Could not load settings, showing last known values.');
+    }
+    refreshRows();
+  }
+
+  async function deleteAccount() {
+    try {
+      await Api.deleteAccount();
+    } catch (err) {
+      alert(err.message || 'Could not delete account.');
+      return;
+    }
+    localStorage.clear();
+    window.location.href = 'index.html';
+  }
+
+  function logout() {
+    Auth.logout();
+  }
+
+  buildAgeLists();
+  buildNationalities();
+  loadSettings();
+</script>
+</body>
+</html>
